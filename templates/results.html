@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Medical Report Summary</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f2f6fc;
+        color: #333;
+        margin: 0;
+        padding: 2rem;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+
+      h2 {
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+      }
+
+      h2::before {
+        content: "📋";
+        margin-right: 10px;
+        font-size: 1.5rem;
+      }
+
+      .result-card {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        background-color: #f9fbff;
+        border-left: 6px solid #dfe6ee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .result-label {
+        font-weight: 600;
+        font-size: 1.05rem;
+      }
+
+      .badge {
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: capitalize;
+      }
+
+      .high {
+        background-color: #ffeaea;
+        border-left-color: #e74c3c;
+      }
+
+      .high .badge {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .low {
+        background-color: #fff2e5;
+        border-left-color: #e67e22;
+      }
+
+      .low .badge {
+        background-color: #e67e22;
+        color: white;
+      }
+
+      .normal {
+        background-color: #e9f8ef;
+        border-left-color: #2ecc71;
+      }
+
+      .normal .badge {
+        background-color: #2ecc71;
+        color: white;
+      }
+
+      .note {
+        font-size: 0.9rem;
+        color: #888;
+        margin-top: 2rem;
+      }
+
+      .spacer {
+        margin: 2rem 0;
+        border-top: 1px solid #ddd;
+      }
+
+      .toggle-button {
+        position: fixed;
+        bottom: 20px;
+        z-index: 1000;
+        background-color: #3498db;
+        color: white;
+        padding: 12px 18px;
+        border-radius: 50px;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .dark-mode {
+        background-color: #2c3e50;
+        color: white;
+      }
+
+      .dark-mode .container {
+        background-color: #34495e;
+      }
+
+      .chatbot-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 320px;
+        max-height: 500px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 999;
+        cursor: move;
+      }
+
+      .chatbot-header {
+        background-color: #3498db;
+        color: white;
+        padding: 0.8rem 1rem;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .chatbot-body {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+        font-size: 0.9rem;
+      }
+
+      .chatbot-footer {
+        display: flex;
+        border-top: 1px solid #eee;
+      }
+
+      .chatbot-footer input {
+        flex: 1;
+        border: none;
+        padding: 0.7rem;
+        font-size: 0.9rem;
+        outline: none;
+      }
+
+      .chatbot-footer button {
+        background-color: #3498db;
+        border: none;
+        color: white;
+        padding: 0.7rem 1rem;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .message {
+        margin-bottom: 0.7rem;
+      }
+
+      .user {
+        color: #2980b9;
+      }
+
+      .bot {
+        color: #2c3e50;
+      }
+
+      /* Move button for the download and theme toggle */
+      .toggle-button-left {
+        left: 20px;
+        right: auto;
+      }
+
+      /* Chat button position */
+      .chat-button-right {
+        right: 20px;
+        bottom: 20px;
+      }
+
+      /* Text-to-speech button */
+      .tts-button {
+        display: inline-flex;
+        align-items: center;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .tts-button:hover {
+        background-color: #2980b9;
+      }
+
+      .tts-button svg {
+        margin-right: 5px;
+      }
+
+      .tts-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .voice-selector {
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Medical Report Summary</h2>
+
+      <!-- Text-to-Speech Controls -->
+      <div class="tts-controls">
+        <button class="tts-button" id="speak-report">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"
+            />
+            <path
+              d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"
+            />
+            <path
+              d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"
+            />
+          </svg>
+          Read Report
+        </button>
+        <button class="tts-button" id="pause-resume" style="display: none">
+          Pause
+        </button>
+        <button class="tts-button" id="stop-speech" style="display: none">
+          Stop
+        </button>
+        <select class="voice-selector" id="voice-selector">
+          <option value="">Default Voice</option>
+        </select>
+      </div>
+
+      <div id="report-content">
+        {% if results %} {% for result in results %}
+        <div class="result-card {{ result.status }}">
+          <div class="result-label">{{ result.label }}</div>
+          <div class="badge">{{ result.status }}</div>
+        </div>
+        {% endfor %} {% else %}
+        <p>No structured results available.</p>
+        {% endif %}
+
+        <div class="spacer"></div>
+        <p>
+          Some results may fall outside the expected range. Please consult your
+          healthcare provider for a complete interpretation.
+        </p>
+        <p class="note">
+          *This summary is automatically generated and intended for
+          informational use only.
+        </p>
+      </div>
+
+      <!-- Dark/Light Mode Toggle Button -->
+      <button class="toggle-button toggle-button-left" onclick="toggleTheme()">
+        🌙/🌞 Toggle Theme
+      </button>
+
+      <!-- PDF Download Button -->
+      <button class="toggle-button" onclick="downloadPDF()">
+        📄 Download Summary
+      </button>
+    </div>
+
+    <!-- Floating Chatbot Toggle (Right side) -->
+    <button
+      class="toggle-button chat-button-right"
+      id="chat-toggle"
+      onclick="toggleChatbot()"
+    >
+      💬 Chat
+    </button>
+
+    <!-- Chatbot UI -->
+    <div
+      class="chatbot-container"
+      id="chatbot"
+      style="display: none"
+      id="draggable-chatbot"
+    >
+      <div class="chatbot-header">
+        Smart HealthBot
+        <span style="cursor: pointer" onclick="toggleChatbot()">✖</span>
+      </div>
+      <div class="chatbot-body" id="chat-messages">
+        <div class="message bot">
+          👋 Hi! Ask me anything about your medical report.
+        </div>
+      </div>
+      <div class="chatbot-footer">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Type your question..."
+          onkeydown="checkEnter(event)"
+        />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <script>
+      // Text-to-Speech functionality
+      let synth = window.speechSynthesis;
+      let utterance = null;
+      let isPaused = false;
+
+      // Initialize voices when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        // Check if browser supports speech synthesis
+        if ("speechSynthesis" in window) {
+          populateVoices();
+          if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoices;
+          }
+        } else {
+          document.getElementById("speak-report").style.display = "none";
+          alert("Your browser does not support text-to-speech functionality.");
+        }
+      });
+
+      function populateVoices() {
+        const voiceSelect = document.getElementById("voice-selector");
+        voiceSelect.innerHTML = '<option value="">Default Voice</option>';
+
+        const voices = synth.getVoices();
+        voices.forEach((voice, i) => {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `${voice.name} (${voice.lang})`;
+          voiceSelect.appendChild(option);
+        });
+      }
+
+      document.getElementById("speak-report").addEventListener("click", () => {
+        // Stop any existing speech
+        if (synth.speaking) {
+          synth.cancel();
+        }
+
+        // Get the text to speak - extracting from the report content
+        const reportContent = document.getElementById("report-content");
+        const textToSpeak = reportContent.textContent.trim();
+
+        // Create a new utterance
+        utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+        // Set the selected voice if one is chosen
+        const voiceSelect = document.getElementById("voice-selector");
+        if (voiceSelect.value !== "") {
+          const voices = synth.getVoices();
+          utterance.voice = voices[voiceSelect.value];
+        }
+
+        // Show controls when speaking starts
+        document.getElementById("pause-resume").style.display = "inline-flex";
+        document.getElementById("stop-speech").style.display = "inline-flex";
+
+        // Start speaking
+        synth.speak(utterance);
+
+        // Handle speech end
+        utterance.onend = () => {
+          document.getElementById("pause-resume").style.display = "none";
+          document.getElementById("stop-speech").style.display = "none";
+          isPaused = false;
+        };
+      });
+
+      document.getElementById("pause-resume").addEventListener("click", () => {
+        if (synth.speaking) {
+          if (isPaused) {
+            // Resume speech
+            synth.resume();
+            document.getElementById("pause-resume").textContent = "Pause";
+            isPaused = false;
+          } else {
+            // Pause speech
+            synth.pause();
+            document.getElementById("pause-resume").textContent = "Resume";
+            isPaused = true;
+          }
+        }
+      });
+
+      document.getElementById("stop-speech").addEventListener("click", () => {
+        if (synth.speaking) {
+          synth.cancel();
+          document.getElementById("pause-resume").style.display = "none";
+          document.getElementById("stop-speech").style.display = "none";
+          isPaused = false;
+        }
+      });
+
+      // Make chatbot movable
+      const chatbot = document.getElementById("draggable-chatbot");
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      chatbot.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        offsetX = e.clientX - chatbot.offsetLeft;
+        offsetY = e.clientY - chatbot.offsetTop;
+        document.addEventListener("mousemove", dragChatbot);
+        document.addEventListener("mouseup", stopDragging);
+      });
+
+      function dragChatbot(e) {
+        if (isDragging) {
+          chatbot.style.left = `${e.clientX - offsetX}px`;
+          chatbot.style.top = `${e.clientY - offsetY}px`;
+        }
+      }
+
+      function stopDragging() {
+        isDragging = false;
+        document.removeEventListener("mousemove", dragChatbot);
+        document.removeEventListener("mouseup", stopDragging);
+      }
+
+      function toggleChatbot() {
+        const bot = document.getElementById("chatbot");
+        const chatToggle = document.getElementById("chat-toggle");
+        if (bot.style.display === "none") {
+          bot.style.display = "flex";
+          chatToggle.style.display = "none"; // Hide chat toggle when opened
+        } else {
+          bot.style.display = "none";
+          chatToggle.style.display = "block"; // Show chat toggle when closed
+        }
+      }
+
+      function checkEnter(event) {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("user-input");
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        const chat = document.getElementById("chat-messages");
+
+        const userMsg = document.createElement("div");
+        userMsg.className = "message user";
+        userMsg.textContent = "You: " + msg;
+        chat.appendChild(userMsg);
+
+        input.value = "";
+
+        try {
+          const res = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: msg }),
+          });
+          const data = await res.json();
+
+          const botMsg = document.createElement("div");
+          botMsg.className = "message bot";
+          botMsg.textContent =
+            "Bot: " +
+            (data.response || data.error || "Sorry, something went wrong.");
+          chat.appendChild(botMsg);
+          chat.scrollTop = chat.scrollHeight;
+
+          // Optional: Read aloud bot's response
+          if (document.getElementById("auto-tts-responses")) {
+            speakText(
+              "Bot: " +
+                (data.response || data.error || "Sorry, something went wrong.")
+            );
+          }
+        } catch (err) {
+          const errMsg = document.createElement("div");
+          errMsg.className = "message bot";
+          errMsg.textContent = "Bot: Sorry, I couldn't respond right now.";
+          chat.appendChild(errMsg);
+        }
+      }
+
+      // Function to speak specific text
+      function speakText(text) {
+        if (!synth.speaking) {
+          const utterThis = new SpeechSynthesisUtterance(text);
+          const voiceSelect = document.getElementById("voice-selector");
+          if (voiceSelect.value !== "") {
+            const voices = synth.getVoices();
+            utterThis.voice = voices[voiceSelect.value];
+          }
+          synth.speak(utterThis);
+        }
+      }
+
+      // Dark/Light mode toggle
+      function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+      }
+
+      // PDF Download function
+      function downloadPDF() {
+        const pdf = new jsPDF();
+        pdf.html(document.querySelector(".container"), {
+          callback: function (doc) {
+            doc.save("medical-report-summary.pdf");
+          },
+        });
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  </body>
+</html>
